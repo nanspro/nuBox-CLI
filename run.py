@@ -44,6 +44,13 @@ class nuCLI(object):
         self.CONF_DIR = os.path.join('.', 'config')
         self.ALICE_DIR = os.path.join(self.CONF_DIR, 'alice')
         self.BOB_DIR = os.path.join(self.CONF_DIR, 'bob')
+        self.email_file = os.path.join(self.ALICE_DIR, 'email')
+        
+        try:
+            with open(self.email_file) as f:
+                self.email = f.read()
+        except:
+            pass
 
         check_or_create([self.CONF_DIR, self.ALICE_DIR, self.BOB_DIR])
 
@@ -59,9 +66,10 @@ class nuCLI(object):
         self.HASHES_LIST = os.path.join(self.ALICE_DIR, 'hashes-list.json')
 
 
-    def initialize(self, email, password, restore=False):
+    def initialize(self, email):
         '''Initializing stuff, generating key pair'''
-        self.email = email
+        with open(self.email_file, "w") as f:
+            f.write(email)
         ############################
         # Initializing Alice
         ursula = Ursula.from_seed_and_stake_info(seed_uri=self.SEEDNODE_URI,
@@ -93,7 +101,7 @@ class nuCLI(object):
 
         ##############################
         # Initializing Bob
-        if not os.isfile(self.PRIVATE_JSON):
+        if not os.path.isfile(self.PRIVATE_JSON):
             enc_privkey = UmbralPrivateKey.gen_key()
             sig_privkey = UmbralPrivateKey.gen_key()
 
@@ -295,8 +303,7 @@ class nuCLI(object):
                 "ipfsHashes": ipfsHashes,
             }
         
-        self.email = "nemaniarjun@gmail.com"
-        self.email_app_pass = ""
+        self.email_app_pass = os.environ.get("GMAIL_PASSWORD")
         yag = yagmail.SMTP(self.email, self.email_app_pass)
         contents = [
             "Hey there!", "I am happy to give you access to my files for the next 24hrs",
