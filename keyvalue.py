@@ -23,5 +23,4 @@ def get_value(key):
     try:
         return x.json()
     except Exception as e:
-        print(e)
         return None

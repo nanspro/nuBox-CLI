@@ -287,22 +287,16 @@ class nuCLI(object):
                             n=n,
                             expiration=policy_end_datetime)
         
-        if privkeys:
-            data = {
-                "policy_pubkey": policy.public_key.to_bytes().hex(),
-                "alice_sig_pubkey": bytes(alicia.stamp).hex(),
-                "label": label.decode(),
-                "ipfsHashes": ipfsHashes,
-                "privkeys": privkeys
-            }
-        else: 
-            data = {
+        data = {
                 "policy_pubkey": policy.public_key.to_bytes().hex(),
                 "alice_sig_pubkey": bytes(alicia.stamp).hex(),
                 "label": label.decode(),
                 "ipfsHashes": ipfsHashes,
             }
         
+        if privkeys:
+            data["privkeys"] = privkeys
+            
         self.email_app_pass = os.environ.get("GMAIL_PASSWORD")
         yag = yagmail.SMTP(self.email, self.email_app_pass)
         contents = [
@@ -337,7 +331,7 @@ class nuCLI(object):
         
         # Re-encrypt the data and then decrypt it
         # Getting data from ipfs
-        for ipfsHash in data['ipfsHashes']:
+        for ipfsHash in data['ipfsHashes'].values():
             enc_data = self.api.cat(ipfsHash)
             data = msgpack.loads(enc_data)
 
