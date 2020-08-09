@@ -8,6 +8,7 @@ import maya
 import traceback
 import msgpack
 import ipfshttpclient
+import yagmail
 
 
 from timeit import default_timer as timer
@@ -36,10 +37,13 @@ class nuCLI(object):
         self.PUBLIC_JSON = 'public.json'
         self.PRIVATE_JSON = 'private.json'
 
-    def initialize(self, email, restore=False):
+
+    def initialize(self, email, password, restore=False):
         '''Initializing stuff, generating key pair'''
         # Creating ipfs api object
         self.api = ipfshttpclient.connect('/dns/localhost/tcp/5001/http')
+        self.email = email
+        self.email_app_pass = '' # https://support.google.com/mail/?p=BadCredentials
 
         enc_privkey = UmbralPrivateKey.gen_key()
         sig_privkey = UmbralPrivateKey.gen_key()
@@ -225,11 +229,20 @@ class nuCLI(object):
                             m=m,
                             n=n,
                             expiration=policy_end_datetime)
-        print(json.dumps({
+        data = json.dumps({
             "policy_pubkey": policy.public_key.to_bytes().hex(),
             "alice_sig_pubkey": bytes(alicia.stamp).hex(),
             "label": label.decode(),
-        }))
+            "ipfsHash": ipfsHash
+        })
+        yag = yagmail.SMTP(self.email, self.email_app_pass)
+        contents = [
+            "Hey there!", "I am happy to give you access to my files for the next 24hrs",
+            "These are the things you would require to access these files, ", data
+        ]
+        print(contents)
+        yag.send(email, 'Giving Access to ' + label, contents)
+
 
 
     def fetch(self, policy_metadata, ipfsHash): 
